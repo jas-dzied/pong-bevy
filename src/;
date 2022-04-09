@@ -1,0 +1,58 @@
+use bevy::prelude::*;
+
+const PADDLE_WIDTH: f32 = 20.0;
+const PADDLE_HEIGHT: f32 = 100.0;
+const PADDLE_COLOR: Color = Color::rgb(1.0, 0.0, 0.0);
+const PADDLE_SPEED: f32 = 5.0;
+
+#[derive(Component)]
+struct Paddle;
+
+#[derive(Component, Clone, Copy, PartialEq)]
+struct Position {
+    x: i64,
+    y: i64,
+}
+
+fn main() {
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_startup_system(setup)
+        .add_system(paddle_movement)
+        .run();
+}
+
+fn setup(
+    windows: Res<Windows>,
+    mut commands: Commands
+) {
+    let window = windows.get_primary().unwrap();
+    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.
+        spawn_bundle(SpriteBundle {
+            sprite: Sprite {
+                color: PADDLE_COLOR,
+                custom_size: Some(Vec2::new(PADDLE_WIDTH, PADDLE_HEIGHT)),
+                ..Default::default()
+            },
+            transform: Transform {
+                translation: Vec3::new(-((window.width()/2.0)-PADDLE_WIDTH/2.0), 0.0, 0.0),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(Paddle);
+}
+
+fn paddle_movement(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut paddle_positions: Query<(&Paddle, &mut Transform)>
+) {
+    for (_, mut transform) in paddle_positions.iter_mut() {
+        if keyboard_input.pressed(KeyCode::Up) {
+            transform.translation.y += PADDLE_SPEED;
+        } else if keyboard_input.pressed(KeyCode::Down) {
+            transform.translation.y -= PADDLE_SPEED;
+        }
+    }
+}
